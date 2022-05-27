@@ -1,0 +1,6 @@
+#root {
+  background: #ebebeb;
+}
+::-webkit-scrollbar {
+  width: 5px;
+}
