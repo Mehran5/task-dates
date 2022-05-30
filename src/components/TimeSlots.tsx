@@ -1,9 +1,43 @@
 import { useState } from "react";
+import styled from "styled-components";
 import swal from 'sweetalert';
-import { formatDateTime } from "../shared/utils";
-import { SlotButton, SlotDivision, WeekName } from "../assets/styling";
+import PropTypes from 'prop-types';
 
-export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisabled }: any) => {
+import { formatDateTime } from "../utils";
+import Button from "./Button";
+
+const WeekName = styled.div`
+	text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+`;
+
+const SlotDivision = styled.div`
+	margin: 10px 0px;
+`;
+
+const SlotButton = styled(Button)`
+	background-color: #3d57ff;
+	border: 1px solid #3d57ff;
+	color: white;
+	padding: 10px 18px;
+	font-weight: 400;
+	font-family: "Segoe UI", Roboto;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;    
+	:hover {
+			background-color: #263dd6;;
+	}
+	:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+`;
+
+
+
+export const TimeSlots = ({ slots, companyIndex, addReservedSlots }: any) => {
     let [timeSlots, setTimeSlots] = useState(slots);
     let sortedSlots: any = [];
 
@@ -36,8 +70,6 @@ export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisable
             x.disabled = false
         });
         timeSlotsDeepCopy[weekName][slotIndex].disabled = true;
-        timeSlotsDeepCopy[weekName][slotIndex + 1].disabled = true;
-        timeSlotsDeepCopy[weekName][slotIndex + 2].disabled = true;
         setTimeSlots(timeSlotsDeepCopy);
 
         addReservedSlots(timeSlot, companyIndex, slotIndex, weekName, timeSlotsDeepCopy);
@@ -79,3 +111,11 @@ export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisable
         })
     );
 }
+
+TimeSlots.propTypes = {
+    slots: PropTypes.object.isRequired,
+    companyIndex: PropTypes.number.isRequired,
+    addReservedSlots: PropTypes.func.isRequired
+};
+
+export default TimeSlots;

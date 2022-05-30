@@ -1,15 +1,43 @@
-import iCompanyData from "../types/Company";
-import { Content, Name, FlexContainer, NoReservedSlots } from "../assets/styling"
 import { useEffect, useState } from "react";
+import styled from 'styled-components';
+
+import iCompanyData from "../types/Company";
 import { TimeSlots } from "./TimeSlots";
 import { ReservedTimeSlots } from "./ReservedTimeSlots";
 import CompanyService from "../services/company.service";
-import _ from 'lodash';
-import moment from "moment";
+
+const FlexContainer = styled.div`
+	display: flex;
+	flex-flow: wrap;
+	justify-content: center;
+`;
+
+const Content = styled.div`
+	border: 1px solid #ebebeb;
+	padding: 30px 50px;
+	background-color: #eeeeee;
+	margin: 60px;
+	border-radius: 10px;
+	box-shadow: 0px 0px 15px 0px #ebebeb;
+	max-height: 635px;
+	overflow-x: auto;
+`;
+
+const Name = styled.h2`
+	font-weight: 500;
+	font-family: "Segoe UI", Roboto;
+	text-align: center;
+`;
+
+const NoReservedSlots = styled.div`
+	text-align: center;
+    padding: 10px 0px;
+    margin: 15px 0px;
+`;
 
 export const Companies = () => {
    const [companies, setCompanies] = useState<iCompanyData[]>([]);
-   let [globalSlots, setGlobalSlots] = useState([]);
+   let [slotState, setSlotState] = useState([]);
 
    useEffect(() => {
       retrieveCompanies();
@@ -23,48 +51,46 @@ export const Companies = () => {
       CompanyService.getAll()
          .then((response: any) => {
 
-            const companies = response.data;
+            const formatCompanyResponse = CompanyService.companiesGroupByDay(response.data);
+            setCompanies(formatCompanyResponse);
 
-            const weekName = (item: any) => moment(item.start_time, 'YYYY-MM-DD').format('dddd');
-            companies.forEach((element: any, index: any) => {
-               element.time_slots = _.groupBy(element.time_slots, weekName)
-            });
-
-            setCompanies(companies);
          })
          .catch((e: Error) => {
             console.log(e);
          });
    };
 
-   if (companies.length === 0) return null;
-
    /**
     * To add reserved slots
     */
    const addReservedSlots = (reservedSlot: any, companyIndex: number, slotIndex: number, weekName: any, slots: any) => {
 
-      let companiesDeepCopy = JSON.parse(JSON.stringify(companies));
-      companiesDeepCopy[companyIndex].reservedSlots = [{ reservedSlot, slotIndex, weekName }];
-      setGlobalSlots(slots);
+      const companiesWithReservations = CompanyService.addReservedSlots(
+         companies,
+         reservedSlot,
+         companyIndex,
+         slotIndex,
+         weekName
+      );
 
-      setCompanies([...companiesDeepCopy]);
+      setSlotState(slots);
+      setCompanies([...companiesWithReservations]);
    }
 
    /**
     * To remove reserved slots
     */
    const removeReservedSlot = (rSlotIndex: number, weekName: string, companyIndex: number) => {
-      let companiesDeepCopy = JSON.parse(JSON.stringify(companies));
 
-      companiesDeepCopy[companyIndex].reservedSlots = companiesDeepCopy[companyIndex].reservedSlots.filter((x: any) => x.slotIndex !== rSlotIndex);
+      const companiesDataWithoutReservations = CompanyService.removeReservedSlots(
+         companies,
+         rSlotIndex,
+         weekName,
+         companyIndex,
+         slotState
+      );
 
-      companiesDeepCopy[companyIndex].time_slots = globalSlots;
-      companiesDeepCopy[companyIndex].time_slots[weekName].forEach((x: any) => {
-         x.disabled = false
-      });
-
-      setCompanies([...companiesDeepCopy]);
+      setCompanies([...companiesDataWithoutReservations]);
    }
 
    /**
@@ -89,7 +115,6 @@ export const Companies = () => {
                            weekName={x.weekName}
                            slotIndex={x.slotIndex}
                            companyIndex={companyIndex}
-                           timeSlots={company}
                            removeReservedSlot={removeReservedSlot}
                         />
                      ))
@@ -113,3 +138,5 @@ export const Companies = () => {
       </FlexContainer>
    )
 }
+
+export default Companies;
