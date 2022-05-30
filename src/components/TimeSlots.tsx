@@ -1,4 +1,5 @@
 import { useState } from "react";
+import swal from 'sweetalert';
 import { formatDateTime } from "../shared/utils";
 import { SlotButton, SlotDivision, WeekName } from "../assets/styling";
 
@@ -9,7 +10,27 @@ export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisable
     /**
      * To select desired timeslots
      */
-    const selectSlot = (slot: any, timeSlot: any, companyIndex: number, slotIndex: number, weekName: string) => {
+    const selectSlot = (timeSlot: any, companyIndex: number, slotIndex: number, weekName: string) => {
+
+        swal({
+            title: timeSlot,
+            text: "Are you sure you want to reserve this timeslot?",
+            icon: "warning",
+            dangerMode: true,
+            buttons: [true, true]
+        }).then((willDelete) => {
+            if (willDelete) {
+                makeReservation(timeSlot, companyIndex, slotIndex, weekName);
+            } else {
+                return false;
+            }
+        });
+
+
+    }
+
+    const makeReservation = (timeSlot: any, companyIndex: number, slotIndex: number, weekName: string) => {
+
         let timeSlotsDeepCopy = JSON.parse(JSON.stringify(timeSlots));
         timeSlotsDeepCopy[weekName].forEach((x: any) => {
             x.disabled = false
@@ -44,7 +65,7 @@ export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisable
                                 <SlotDivision key={indx}>
                                     <SlotButton
                                         text={timeSlot}
-                                        clickButton={() => selectSlot(sortedSlot, timeSlot, companyIndex, indx, weekName)}
+                                        clickButton={() => selectSlot(timeSlot, companyIndex, indx, weekName)}
                                         disabled={sortedSlots[indx].disabled}
                                     />
                                 </SlotDivision>
