@@ -1,5 +1,6 @@
 export default interface iCompanyData {
-   companies: Array<iCompanies>
+   time_slots: Array<iTimeSlots>;
+   companies: Array<iCompanies>;
 }
 interface iCompanies {
    [index: number]: { id: any | null; name: string; type: string };
@@ -7,6 +8,9 @@ interface iCompanies {
    reservedSlots: Array<iReservedSlots>
 }
 interface iTimeSlots {
+   start_time: string;
+   end_time: string;
+   disabled: boolean;
    [index: number]: { start_time: string; end_time: string, disabled: boolean };
 }
 interface iReservedSlots {

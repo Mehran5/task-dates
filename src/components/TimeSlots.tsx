@@ -1,30 +1,60 @@
 import { useState } from "react";
 import { formatDateTime } from "../shared/utils";
-import { SlotButton } from "./styling";
+import { SlotButton, SlotDivision, WeekName } from "../assets/styling";
 
+export const TimeSlots = ({ slots, companyIndex, addReservedSlots, removeDisabled }: any) => {
+    let [timeSlots, setTimeSlots] = useState(slots);
+    let sortedSlots: any = [];
 
-export const TimeSlots = ({ slot, companyIndex, slotIndex, addReservedSlots }: any) => {
-    const [disabled, setDisabled] = useState(false);
+    /**
+     * To select desired timeslots
+     */
+    const selectSlot = (slot: any, timeSlot: any, companyIndex: number, slotIndex: number, weekName: string) => {
+        let timeSlotsDeepCopy = JSON.parse(JSON.stringify(timeSlots));
+        timeSlotsDeepCopy[weekName].forEach((x: any) => {
+            x.disabled = false
+        });
+        timeSlotsDeepCopy[weekName][slotIndex].disabled = true;
+        timeSlotsDeepCopy[weekName][slotIndex + 1].disabled = true;
+        timeSlotsDeepCopy[weekName][slotIndex + 2].disabled = true;
+        setTimeSlots(timeSlotsDeepCopy);
 
-    slot.disabled = false;
-    const day = formatDateTime(slot.start_time, 'dddd');
-    const startTime = formatDateTime(slot.start_time, 'hh:mmA');
-    const endTime = formatDateTime(slot.end_time, 'hh:mmA');
-    const timeSlot = `${startTime} - ${endTime}`;
-
-    const selectSlot = (timeSlot: any, companyIndex: number, slotIndex: number) => {
-        setDisabled(true);
-        slot.disabled = true;
-        addReservedSlots(timeSlot, companyIndex, slotIndex);
+        addReservedSlots(timeSlot, companyIndex, slotIndex, weekName, timeSlotsDeepCopy);
     }
 
+    let weekNames: any = [];
+    weekNames = Object.keys(timeSlots);
+
     return (
-        <>
-            <div>{day}</div>
-            <SlotButton
-                text={timeSlot}
-                clickButton={() => selectSlot(timeSlot, companyIndex, slotIndex)}
-                disabled={disabled} />
-        </>
+        weekNames.map((weekName: any, index: number) => {
+
+            sortedSlots = timeSlots[weekName].sort((date1: any, date2: any) => date1.start_time - date2.start_time);
+
+            return (
+                <>
+                    <WeekName key={index}>{weekName}</WeekName>
+                    {
+                        sortedSlots.map((sortedSlot: any, indx: number) => {
+
+                            const startTime = formatDateTime(sortedSlot.start_time, 'hh:mmA');
+                            const endTime = formatDateTime(sortedSlot.end_time, 'hh:mmA');
+                            const timeSlot = `${startTime} - ${endTime}`;
+
+                            return (
+                                <SlotDivision key={indx}>
+                                    <SlotButton
+                                        text={timeSlot}
+                                        clickButton={() => selectSlot(sortedSlot, timeSlot, companyIndex, indx, weekName)}
+                                        disabled={sortedSlots[indx].disabled}
+                                    />
+                                </SlotDivision>
+                            )
+
+                        })
+                    }
+                </>
+            )
+
+        })
     );
 }

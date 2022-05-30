@@ -1,21 +1,36 @@
 import iCompanyData from "../types/Company";
-import { Content, Name, FlexContainer } from "./styling"
+import { Content, Name, FlexContainer, NoReservedSlots } from "../assets/styling"
 import { useEffect, useState } from "react";
 import { TimeSlots } from "./TimeSlots";
 import { ReservedTimeSlots } from "./ReservedTimeSlots";
 import CompanyService from "../services/company.service";
+import _ from 'lodash';
+import moment from "moment";
 
 export const Companies = () => {
    const [companies, setCompanies] = useState<iCompanyData[]>([]);
+   let [globalSlots, setGlobalSlots] = useState([]);
 
    useEffect(() => {
       retrieveCompanies();
    }, []);
 
+
+   /**
+    * To get all companies
+    */
    const retrieveCompanies = () => {
       CompanyService.getAll()
          .then((response: any) => {
-            setCompanies(response.data);
+
+            const companies = response.data;
+
+            const weekName = (item: any) => moment(item.start_time, 'YYYY-MM-DD').format('dddd');
+            companies.forEach((element: any, index: any) => {
+               element.time_slots = _.groupBy(element.time_slots, weekName)
+            });
+
+            setCompanies(companies);
          })
          .catch((e: Error) => {
             console.log(e);
@@ -24,22 +39,39 @@ export const Companies = () => {
 
    if (companies.length === 0) return null;
 
-   const addReservedSlots = (reservedSlot: any, companyIndex: number, slotIndex: number) => {
-      let tempComapanyState = JSON.parse(JSON.stringify(companies));
-      tempComapanyState[companyIndex].reservedSlots.push({ reservedSlot, slotIndex });
+   /**
+    * To add reserved slots
+    */
+   const addReservedSlots = (reservedSlot: any, companyIndex: number, slotIndex: number, weekName: any, slots: any) => {
 
-      setCompanies(tempComapanyState);
+      let companiesDeepCopy = JSON.parse(JSON.stringify(companies));
+      companiesDeepCopy[companyIndex].reservedSlots = [{ reservedSlot, slotIndex, weekName }];
+      setGlobalSlots(slots);
+
+      setCompanies([...companiesDeepCopy]);
    }
 
-   const removeReservedSlot = (rSlotIndex: number, companyIndex: number) => {
-      let tempComapanyState = JSON.parse(JSON.stringify(companies));
-      // tempComapanyState[companyIndex].time_slots[rSlotIndex].disabled = false;
-      tempComapanyState[companyIndex].reservedSlots = tempComapanyState[companyIndex].reservedSlots.filter((x: any) => x.slotIndex !== rSlotIndex);
+   /**
+    * To remove reserved slots
+    */
+   const removeReservedSlot = (rSlotIndex: number, weekName: string, companyIndex: number) => {
+      let companiesDeepCopy = JSON.parse(JSON.stringify(companies));
 
-      setCompanies(tempComapanyState);
+      companiesDeepCopy[companyIndex].reservedSlots = companiesDeepCopy[companyIndex].reservedSlots.filter((x: any) => x.slotIndex !== rSlotIndex);
+
+      companiesDeepCopy[companyIndex].time_slots = globalSlots;
+      companiesDeepCopy[companyIndex].time_slots[weekName].forEach((x: any) => {
+         x.disabled = false
+      });
+
+      setCompanies([...companiesDeepCopy]);
    }
 
+   /**
+    * To render companies, timeslots and reserverd timeslots
+    */
    const content = (company: any, companyIndex: any) => {
+
       company.reservedSlots = company.reservedSlots && company.reservedSlots.length ? company.reservedSlots : [];
       const timeSlots = company.time_slots;
       const { reservedSlots } = company;
@@ -48,28 +80,29 @@ export const Companies = () => {
          <Content key={companyIndex}>
             <Name>{company.name}</Name>
             {
-               reservedSlots.map((x: any) => (
-                  <ReservedTimeSlots
-                     key={x.slotIndex}
-                     reservedSlot={x.reservedSlot}
-                     slotIndex={x.slotIndex}
-                     companyIndex={companyIndex}
-                     removeReservedSlot={removeReservedSlot}
-                  />
-               ))
+               reservedSlots.length ?
+                  (
+                     reservedSlots.map((x: any) => (
+                        <ReservedTimeSlots
+                           key={x.slotIndex}
+                           reservedSlot={x.reservedSlot}
+                           weekName={x.weekName}
+                           slotIndex={x.slotIndex}
+                           companyIndex={companyIndex}
+                           timeSlots={company}
+                           removeReservedSlot={removeReservedSlot}
+                        />
+                     ))
+                  ) : < NoReservedSlots > No slot reserved</NoReservedSlots>
             }
             {
-               timeSlots.map((slot: any, index: number) => (
-                  <TimeSlots
-                     key={index}
-                     slot={slot}
-                     companyIndex={companyIndex}
-                     slotIndex={index}
-                     addReservedSlots={addReservedSlots}
-                  />
-               ))
+               <TimeSlots
+                  slots={timeSlots}
+                  companyIndex={companyIndex}
+                  addReservedSlots={addReservedSlots}
+               />
             }
-         </Content>
+         </Content >
       )
 
    }

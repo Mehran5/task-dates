@@ -1,10 +1,5 @@
 import { Companies } from './components/Companies';
 
-function App() {
-
-   return (
-      <Companies />
-   );
-}
+const App = () => <Companies />;
 
 export default App;

@@ -19,9 +19,19 @@ export const Content = styled.div `
 `;
 
 export const Name = styled.h2 `
-	// font-size: 16px;
 	font-weight: 500;
 	font-family: "Segoe UI", Roboto;
+	text-align: center;
+`;
+
+export const WeekName = styled.div `
+	text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+`;
+
+export const SlotDivision = styled.div `
+	margin: 10px 0px;
 `;
 
 export const SlotButton = styled(Button)
@@ -42,6 +52,14 @@ export const SlotButton = styled(Button)
 		opacity: 0.35;
 		cursor: not-allowed;
 	}
+`;
+
+export const NoReservedSlots = styled.div`
+	text-align: center;
+    padding: 10px 0px;
+    // border: 1px solid #3d57ff;
+    // background-color: white;
+    margin: 15px 0px;
 `;
 
 export const ReservedSlots = styled.div `
